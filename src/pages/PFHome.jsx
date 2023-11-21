@@ -3,17 +3,30 @@ import { Col, Row } from 'react-bootstrap'
 import designIcon from '../Assets/designicon.png';
 import HomeProjects from '../Components/HomeProjects';
 import { Link } from 'react-router-dom';
+import { homeProjectsAPI } from '../services/allApis';
 
 function PFHome() {
 
   const [isLoggedIn,setLoggedIn] = useState(false)
 
+  const [allProjects,setAllProjects] = useState([])
+
+  const getHomeProject = async ()=> {
+    const result = await homeProjectsAPI()
+    if(result.status === 200) {
+      setAllProjects(result.data)
+    }else{
+      alert(result.response.data)
+    }
+  }
+
   useEffect(()=>{
-    if(localStorage.getItem("existingUser")){
+    if(sessionStorage.getItem("token")){
       setLoggedIn(true)
     }else{
       setLoggedIn(false)
     }
+    getHomeProject()
   })
 
   return (
@@ -37,7 +50,7 @@ function PFHome() {
       </div>
       {/* glimpse of all projects */}
       <div className="all-projects mt-5">
-        <HomeProjects/>
+        <HomeProjects allProjects={allProjects}/>
       </div>
     </>
   )

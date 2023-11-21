@@ -1,10 +1,13 @@
-import React, { useEffect } from 'react'
+import React, { useContext, useEffect } from 'react'
 import { useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import { addProjectApi } from '../services/allApis';
+import { addProjectResponseContext } from '../context/ContextShare';
 
 function AddProject() {
+
+  const {addProjectResponse,setAddProjectResponse} = useContext(addProjectResponseContext)
 
   const [projectDetails,setProjectDetails] = useState({
     title:"",languages:"",github:"",website:"",overview:"",image:"",userId:""
@@ -12,9 +15,12 @@ function AddProject() {
 
   const [preview,setPreview] = useState("")
 
+  const [token,setToken] = useState("")
+
   useEffect(()=>{
-    if(localStorage.getItem("existingUser")){
+    if(localStorage.getItem("existingUser") && sessionStorage.getItem("token")){
       setProjectDetails({...projectDetails,userId:JSON.parse(localStorage.getItem("existingUser"))._id})
+      setToken(sessionStorage.getItem("token"))
     }
   },[])
 
@@ -48,13 +54,22 @@ function AddProject() {
       reqBody.append("github",github)
       reqBody.append("website",website)
       reqBody.append("overview",overview)
-      reqBody.append("image",image)
+      reqBody.append("projectImage",image)
       reqBody.append("userId",userId)
       const reqHeader = {
-        "Content-Type":"multipart/form-data"
-      }
+        "Content-Type":"multipart/form-data", "Authorization":`Bearer ${token}`
+      } 
       const result = await addProjectApi(reqBody,reqHeader)
-      console.log(result);
+      if(result.status===200){
+        alert(`Project ${result.data.title} added successfully`)
+        setProjectDetails({
+          title:"",languages:"",github:"",website:"",overview:"",image:"",userId:""
+        })
+        setAddProjectResponse(result.data)
+        handleClose()
+      }else{
+        alert(result.response.data)
+      }
     }
   }
 
@@ -80,7 +95,7 @@ function AddProject() {
             <div className="col-lg-6">
               <label htmlFor="projectPic" className='mb-5 text-center'>
                 <input id='projectPic' onChange={(e)=>setProjectDetails({...projectDetails,image:e.target.files[0]})} type="file" style={{display:'none'}}/>
-                <img className='rounded-circle' height={'100%'}  width={'200px'} src={preview ? preview : "https://static.vecteezy.com/system/resources/thumbnails/019/900/322/small/happy-young-cute-illustration-face-profile-png.png"} alt="project picture" />
+                <img className='img-fluid' height={'100%'}  width={'200px'} src={preview ? preview : "https://static.vecteezy.com/system/resources/thumbnails/019/900/322/small/happy-young-cute-illustration-face-profile-png.png"} alt="project picture" />
               </label>
             </div>
             <div className="col-lg-6">
